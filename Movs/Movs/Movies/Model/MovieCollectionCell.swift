@@ -12,6 +12,7 @@ class MovieCollectionCell: UICollectionViewCell {
   var movie: PopularMovie!
   private var isLiked = false
   private var id = 0
+  private var urlString = ""
   var originalSizePoster = CGSize()
   private var bottomView: UIView = {
     let view = UIView()
@@ -57,17 +58,33 @@ class MovieCollectionCell: UICollectionViewCell {
     fatalError("init(coder:) has not been implemented")
   }
 
-  
+  let imageCache = NSCache<NSString, UIImage>()
+    
+  override func prepareForReuse() {
+    super.prepareForReuse()
+  }
+    
   func configureCell(movie: PopularMovie) {
     self.movie = movie
+    posterImage.image = nil
+    urlString = movie.poster_path ?? ""
     like.addTarget(self, action: #selector(likeButtonAction(sender:)), for: .touchUpInside)
     isLiked = DefaultsMovie.shared.contains(id: movie.id)
     title.text = movie.title
     id = movie.id
+    if let cachedImage = imageCache.object(forKey: NSString(string: movie.poster_path ?? "")) {
+        self.posterImage.image = cachedImage
+        self.originalSizePoster = (self.posterImage.image?.size)!
+        return
+    }
     Network.shared.requestImage(imageName: movie.poster_path ?? "") { (result) in
       switch result {
       case .success(let image):
-        self.posterImage.image = image
+        
+        self.imageCache.setObject(image ?? UIImage(), forKey: NSString(string: movie.poster_path ?? ""))
+        if self.urlString == movie.poster_path ?? "" {
+            self.posterImage.image = image
+        }
         self.originalSizePoster =  image?.size ?? CGSize()
       case .failure(let error):
         print("error: \(error.localizedDescription)")

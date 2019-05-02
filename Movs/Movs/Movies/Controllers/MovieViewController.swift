@@ -134,6 +134,7 @@ class MovieViewController: UIViewController, UISearchResultsUpdating{
     isLoading = true
     self.loadIndicator.startAnimating()
     self.loadIndicator.isHidden = false
+    numberOfPage = numberOfPage != 0 ? numberOfPage + 1 : numberOfPage
     Network.shared.requestPopularMovies(numberOfPage: numberOfPage) { (result) in
       self.isLoading = false
       self.loadIndicator.stopAnimating()
